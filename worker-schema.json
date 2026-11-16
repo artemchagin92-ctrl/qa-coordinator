@@ -1,0 +1,135 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "results",
+    "message",
+    "needed_files"
+  ],
+  "properties": {
+    "needed_files": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "outcome",
+          "summary",
+          "checks",
+          "decision"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "fixed",
+              "blocked",
+              "needs_revision"
+            ]
+          },
+          "summary": {
+            "type": "string"
+          },
+          "checks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "command",
+                "exit_code"
+              ],
+              "properties": {
+                "command": {
+                  "type": "string"
+                },
+                "exit_code": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "decision": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "scope",
+              "question",
+              "proposal",
+              "evidence"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "none",
+                  "simple",
+                  "architecture"
+                ]
+              },
+              "scope": {
+                "type": "string",
+                "enum": [
+                  "none",
+                  "ui_text",
+                  "ui_style",
+                  "existing_behavior",
+                  "architecture"
+                ]
+              },
+              "question": {
+                "type": "string"
+              },
+              "proposal": {
+                "type": "string"
+              },
+              "evidence": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "type",
+                    "reference",
+                    "quote"
+                  ],
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "qa_row",
+                        "requirement",
+                        "code",
+                        "image"
+                      ]
+                    },
+                    "reference": {
+                      "type": "string"
+                    },
+                    "quote": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "message": {
+      "type": "string"
+    }
+  }
+}

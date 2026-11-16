@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="Как проверить результат AI-агента до записи в рабочую систему. QA-кейс и две интерактивные демонстрации.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="До ретеста — QA-кейс Артёма Чагина">
+  <meta property="og:description" content="От отчёта агента до проверенного результата: кейс и два интерактивных сценария.">
+  <title>До ретеста — QA-кейс Артёма Чагина</title>
+  <link rel="icon" href="./mark.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css">
+  <script type="module" src="./app.mjs"></script>
+</head>
+<body>
+  <a class="skip" href="#main">К содержанию</a>
+  <header class="shell top">
+    <a class="identity" href="#" aria-label="Артём Чагин, начало страницы"><img src="./mark.svg" width="36" height="36" alt=""><span>Артём Чагин</span></a>
+    <nav aria-label="Разделы страницы"><a href="#case">Кейс</a><a href="#qa">Демо QA</a><a href="#act">Пример с актом <span aria-hidden="true">↗</span></a></nav>
+  </header>
+  <main id="main">
+    <section class="shell hero" aria-labelledby="title">
+      <div>
+        <p class="eyebrow"><span class="bullet"></span> Портфолио / AI-автоматизация</p>
+        <h1 id="title">От задачи<br>до ретеста<span>.</span></h1>
+        <p class="intro">Как проверить результат AI-агента, прежде чем менять статус задачи или переносить данные в рабочую таблицу.</p>
+        <div class="actions"><a class="button primary" href="#qa">Открыть демо QA <span aria-hidden="true">↓</span></a><a class="textlink" href="#act">Пример с актом <span aria-hidden="true">↗</span></a></div>
+      </div>
+      <aside class="workflow" aria-label="Схема QA-координатора">
+        <div class="workflow-top"><span>РАБОЧИЙ ПРОЦЕСС</span><span class="pulse" aria-hidden="true"></span></div>
+        <ol>
+          <li><span class="ordinal">01</span><span><strong>Задача в очереди</strong><small>Google Sheets · ID и снимок задачи</small></span></li>
+          <li><span class="ordinal">02</span><span><strong>Отчёт агента</strong><small>Codex CLI · изменения и результаты команд</small></span></li>
+          <li><span class="ordinal">03</span><span><strong>Проверки координатора</strong><small>Git · тесты · проверка релиза</small></span></li>
+          <li><span class="ordinal last">04</span><span><strong>Ждёт ретеста</strong><small>Очередь обновляется после проверок</small></span></li>
+        </ol>
+      </aside>
+    </section>
+
+    <section class="shell block" id="case" aria-labelledby="case-title">
+      <p class="eyebrow"><span class="num">01</span> Реальный проект</p>
+      <div class="section-head"><h2 id="case-title">Что было в работе</h2><p>Кейс по QA веб-продукта. Детали проекта обезличены.</p></div>
+      <div class="evidence">
+        <div class="role">
+          <h3>Мой вклад</h3>
+          <p>Задавал правила обработки очереди и критерии передачи на ретест, уточнял ожидаемое поведение и возвращал дефекты в работу, если они воспроизводились.</p>
+          <h3>Как устроен процесс</h3>
+          <p>Координатор сверяет отчёт агента с изменениями в Git и результатами команд. Перед обновлением статуса он проверяет релиз и повторно читает задачу в очереди. Финальный ретест остаётся за тестировщиком.</p>
+        </div>
+        <div class="measure">
+          <span class="eyebrow">Один сценарий Playwright</span>
+          <div class="metric" aria-label="С двух навигаций документа до одной"><span>2</span><span aria-hidden="true">→</span><span>1</span></div>
+          <h3>Навигации документа в открытой вкладке</h3>
+          <p>При замене service worker вкладка перезагружалась лишний раз. Тот же тест на стенде воспроизводил сбой до исправления и проходил после него.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="shell block" id="qa" aria-labelledby="qa-title">
+      <p class="eyebrow"><span class="num">02</span> Интерактивное демо</p>
+      <div class="section-head"><h2 id="qa-title">Когда можно менять статус?</h2><p>Модель QA-процесса на вымышленных данных. Выберите сценарий и запустите проверки.</p></div>
+      <div class="workbench">
+        <div class="bench-bar"><span><i class="light" aria-hidden="true"></i> QA / ПЕРЕДАЧА НА РЕТЕСТ</span><span>СИНТЕТИЧЕСКИЕ ДАННЫЕ</span></div>
+        <div class="bench-controls">
+          <div class="choices" id="qa-choices" role="group" aria-label="Сценарий QA"></div>
+          <button class="button run" type="button" id="qa-run" disabled>Запустить проверки <span aria-hidden="true">▶</span></button>
+        </div>
+        <ol class="steps" id="qa-steps"></ol>
+        <div class="bench-result" id="qa-status" role="status">Выберите сценарий, чтобы начать.</div>
+        <noscript><p class="noscript">Включите JavaScript, чтобы запустить демо.</p></noscript>
+      </div>
+    </section>
+
+    <section class="shell block" id="act" aria-labelledby="act-title">
+      <p class="eyebrow"><span class="num">03</span> Пример для внутренних сервисов</p>
+      <div class="section-head"><h2 id="act-title">Из акта в таблицу опыта</h2><p>Тот же принцип на примере документов: сверить поля, найти расхождения и исключить дубли перед передачей человеку.</p></div>
+      <div class="doc-demo">
+        <div class="doc-toolbar">
+          <div class="choices" id="doc-choices" role="group" aria-label="Сценарий обработки акта"></div>
+          <p>Вымышленный акт и заготовленный ответ модели. Демо проверяет поля в браузере.</p>
+        </div>
+        <div class="doc-grid">
+          <div class="doc-panel"><h3><span class="panel-index">A</span> Исходный акт</h3><dl id="doc-original"></dl></div>
+          <div class="doc-panel"><h3><span class="panel-index">B</span> Извлечённые поля</h3><dl id="doc-extracted"></dl></div>
+          <div class="doc-panel validation"><h3><span class="panel-index">C</span> Проверка</h3><ul id="doc-checks"></ul><p class="doc-outcome" id="doc-status" role="status"></p></div>
+        </div>
+        <noscript><p class="noscript">Включите JavaScript, чтобы переключать сценарии.</p></noscript>
+      </div>
+    </section>
+  </main>
+  <footer class="shell footer"><a class="identity" href="#"><img src="./mark.svg" width="28" height="28" alt=""><span>Артём Чагин</span></a><a class="textlink" href="https://github.com/artemchagin92-ctrl/qa-coordinator">Код на GitHub ↗</a><a class="textlink" href="#main">В начало ↑</a></footer>
+</body>
+</html>
