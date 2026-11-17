@@ -1,0 +1,649 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="robots" content="noindex">
+  <title>Акт → таблица опыта | Демо для Dan Appy</title>
+  <style>
+    :root {
+      color: #182532;
+      background: #f4f7fa;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
+      --muted: #526577;
+      --line: #d9e2e9;
+      --accent: #086653;
+      --accent-dark: #064d3f;
+      --accent-light: #e8f5f0;
+      --surface: #fff;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    body { margin: 0; }
+    h1, h2, p { margin: 0; }
+
+    .shell {
+      width: min(100% - 2.5rem, 70rem);
+      margin: 0 auto;
+    }
+
+    header {
+      padding: 2rem 0 1.65rem;
+      background: var(--surface);
+      border-top: 5px solid var(--accent);
+      border-bottom: 1px solid var(--line);
+    }
+
+    h1 {
+      margin: 0.25rem 0 0.35rem;
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      letter-spacing: -0.055em;
+      line-height: 1.12;
+    }
+
+    .audience { font-size: 0.875rem; font-weight: 700; color: var(--accent); }
+    .byline { color: var(--muted); font-size: 0.875rem; }
+
+    main { padding: 1.5rem 0 2.5rem; }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 1rem;
+      align-items: start;
+    }
+
+    .card {
+      min-width: 0;
+      padding: 1.125rem;
+      border: 1px solid var(--line);
+      border-radius: 0.85rem;
+      background: var(--surface);
+    }
+
+    .card-header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.65rem 1rem;
+      margin-bottom: 0.875rem;
+    }
+
+    h2 { font-size: 1.145rem; line-height: 1.25; letter-spacing: -0.02em; }
+    .card-caption, #document-name, #record-count { color: var(--muted); font-size: 0.825rem; }
+    .card-caption { margin-top: 0.25rem; }
+    #document-name { overflow-wrap: anywhere; }
+
+    .buttons, .file-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      align-items: center;
+    }
+
+    button, .file-picker {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 2.5rem;
+      padding: 0.45rem 0.75rem;
+      border: 1px solid #c9d6de;
+      border-radius: 0.45rem;
+      background: var(--surface);
+      color: #24384a;
+      font: inherit;
+      font-size: 0.8125rem;
+      font-weight: 650;
+      line-height: 1.25;
+      cursor: pointer;
+    }
+
+    button:not(:disabled):hover, .file-picker:hover { background: #eff5f8; }
+    button[aria-pressed="true"], button.active { background: var(--accent-light); border-color: #79ae9e; color: var(--accent-dark); }
+
+    button.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    button.primary:not(:disabled):hover { background: var(--accent-dark); }
+    button:disabled { background: #eaf0f3; border-color: transparent; color: #5a6975; cursor: default; }
+    :focus-visible, .file-picker:focus-within { outline: 3px solid #396ea3; outline-offset: 3px; }
+
+    .file-controls { margin-top: 0.55rem; }
+    .file-picker { position: relative; }
+    .file-picker input {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .source-label { display: block; margin: 0.9rem 0 0.35rem; font-size: 0.8125rem; font-weight: 700; }
+    textarea {
+      display: block;
+      width: 100%;
+      min-height: 10rem;
+      padding: 0.75rem;
+      resize: vertical;
+      border: 1px solid #c9d6de;
+      border-radius: 0.55rem;
+      background: #f8fafb;
+      color: inherit;
+      font: 0.875rem/1.5 ui-monospace, SFMono-Regular, Consolas, monospace;
+    }
+
+    .controls { margin-top: 0.8rem; }
+    #fields {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.5rem;
+    }
+
+    .field {
+      min-width: 0;
+      padding: 0.55rem 0.65rem;
+      border: 1px solid var(--line);
+      border-radius: 0.5rem;
+      background: #f8fafb;
+      overflow-wrap: anywhere;
+    }
+
+    .field-label { display: block; color: var(--muted); font-size: 0.75rem; font-weight: 650; }
+    .field > p { margin-top: 0.15rem; font-size: 0.875rem; font-weight: 650; }
+    .field > small { display: block; color: var(--muted); font-size: 0.75rem; }
+    #issues { margin-top: 0.65rem; overflow-wrap: anywhere; }
+    #issues:empty { display: none; }
+    #issues p, #issues li { font-size: 0.825rem; }
+    #issues ul { margin: 0.35rem 0; padding-left: 1.25rem; }
+
+    #decision {
+      margin-top: 0.7rem;
+      padding: 0.6rem 0.7rem;
+      border-radius: 0.5rem;
+      background: #edf3f7;
+      color: #334a5d;
+      font-size: 0.825rem;
+      font-weight: 650;
+    }
+
+    #decision.ok, #decision[data-kind="ok"] { background: var(--accent-light); color: var(--accent-dark); }
+    #decision.blocked, #decision[data-kind="blocked"] { background: #fff1e7; color: #743a1d; }
+
+    .results { margin-top: 1rem; }
+    .table-scroll { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.875rem; text-align: left; }
+    th, td { padding: 0.65rem 0.6rem; border-bottom: 1px solid var(--line); }
+    th { background: #eef3f7; color: #344a5c; font-size: 0.8rem; white-space: nowrap; }
+    tbody tr:last-child td { border-bottom: 0; }
+    th:last-child, td:last-child { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    td[colspan] { color: var(--muted); text-align: center; white-space: normal; }
+
+    .notes { margin-top: 1rem; color: var(--muted); font-size: 0.8rem; }
+
+    @media (max-width: 48rem) {
+      .shell { width: min(100% - 1.5rem, 70rem); }
+      header { padding: 1.35rem 0 1.25rem; }
+      main { padding-top: 1rem; }
+      .workspace { grid-template-columns: minmax(0, 1fr); }
+      .card { padding: 0.9rem; }
+      table { min-width: 36rem; }
+    }
+
+    @media (max-width: 23rem) { #fields { grid-template-columns: minmax(0, 1fr); } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="shell">
+      <p class="audience">Для команды Dan Appy</p>
+      <h1>Акт → таблица опыта</h1>
+      <p class="byline">Демонстрация · Артём Чагин</p>
+    </div>
+  </header>
+
+  <main class="shell">
+    <div class="workspace">
+      <section class="card" aria-labelledby="source-heading">
+        <div class="card-header">
+          <div>
+            <h2 id="source-heading">Текст акта</h2>
+            <p class="card-caption">Выберите пример, откройте TXT или вставьте текст.</p>
+          </div>
+        </div>
+        <div class="buttons" role="group" aria-label="Примеры актов">
+          <button type="button" id="sample-clean">Обычный акт</button>
+          <button type="button" id="sample-conflict">Расхождение суммы</button>
+          <button type="button" id="sample-duplicate">Дубликат</button>
+        </div>
+        <div class="file-controls">
+          <label class="file-picker">Открыть TXT <input id="file" type="file" accept=".txt,text/plain"></label>
+          <button type="button" id="sample-download">Скачать пример TXT</button>
+        </div>
+        <label class="source-label" for="source">Содержимое документа</label>
+        <textarea id="source" rows="7" spellcheck="false" placeholder="Выберите пример или вставьте сюда текст акта"></textarea>
+        <div class="controls">
+          <button type="button" class="primary" id="analyze">Разобрать акт</button>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="fields-heading">
+        <div class="card-header">
+          <div>
+            <h2 id="fields-heading">Извлечённые поля</h2>
+            <p id="document-name">Документ не выбран</p>
+          </div>
+        </div>
+        <div id="fields"></div>
+        <div id="issues"></div>
+        <div id="decision" aria-live="polite" aria-atomic="true">Разберите акт, чтобы проверить поля.</div>
+        <div class="controls">
+          <button type="button" class="primary" id="approve" disabled>Подтвердить и добавить строку</button>
+        </div>
+      </section>
+    </div>
+
+    <section class="card results" aria-labelledby="results-heading">
+      <div class="card-header">
+        <div>
+          <h2 id="results-heading">Таблица опыта</h2>
+          <p id="record-count">0 строк</p>
+        </div>
+        <button type="button" id="export">Скачать CSV</button>
+      </div>
+      <div class="table-scroll" tabindex="0" role="region" aria-label="Таблица опыта">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Номер</th>
+              <th scope="col">Дата</th>
+              <th scope="col">Клиент</th>
+              <th scope="col">Услуга</th>
+              <th scope="col">Сумма</th>
+            </tr>
+          </thead>
+          <tbody id="rows"><tr><td colspan="5">Подтверждённые акты появятся здесь.</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+    <p class="notes">Демо использует вымышленные документы. Текст и TXT обрабатываются в браузере. Результаты сохраняются в текущей вкладке.</p>
+  </main>
+  <script type="module">
+const { samples, parseAct, actKey, existingRows, toCsv } = (() => {
+const samples = {
+  clean: {
+    title: 'Конференция в Казани',
+    filename: 'akt-kazan.txt',
+    text: [
+      'АКТ № KZ-241 от 14.11.2026',
+      'Заказчик: ООО «Северная студия»',
+      'Услуга: Организация конференции в Казани',
+      'Позиция 1: Аренда зала — 38 000,00 ₽',
+      'Позиция 2: Техническое сопровождение — 17 500,50 ₽',
+      'Итого к оплате: 55 500,50 ₽',
+    ].join('\n'),
+  },
+  conflict: {
+    title: 'Расхождение по сумме',
+    filename: 'akt-moscow-check.txt',
+    text: [
+      'АКТ № MSK-312 от 16.11.2026',
+      'Заказчик: ООО «Маяк Медиа»',
+      'Услуга: Организация конференции в Москве',
+      'Позиция 1: Аренда зала — 46 000,00 ₽',
+      'Позиция 2: Техническое сопровождение — 18 000,00 ₽',
+      'Итого: 68 000,00 ₽',
+    ].join('\n'),
+  },
+  duplicate: {
+    title: 'Акт уже в реестре',
+    filename: 'akt-kazan-repeat.txt',
+    text: [
+      'АКТ № KZ-199 от 02.11.2026',
+      'Заказчик: ООО «Вектор Событий»',
+      'Услуга: Организация конференции в Казани',
+      'Позиция 1: Аренда зала — 32 500,00 ₽',
+      'Позиция 2: Техническое сопровождение — 14 250,00 ₽',
+      'Итого: 46 750,00 ₽',
+    ].join('\n'),
+  },
+};
+
+const columns = [
+  ['number', 'Номер акта'],
+  ['date', 'Дата'],
+  ['client', 'Заказчик'],
+  ['service', 'Услуга'],
+  ['amount', 'Сумма'],
+];
+
+const header = /^акт(?:\s+(?:выполненных работ|оказанных услуг))?\s*(?:№|#)\s*(.+?)(?:\s+от\s+(.+))?$/iu;
+const position = /^(?:позиция|строка)\s*\d*\s*:\s*(.+?)\s+(?:—|–|-)\s+(.+)$/iu;
+const labels = /^(номер(?:\s+акта)?|дата(?:\s+акта)?|заказчик|клиент|услуга|работы|итого(?:\s+(?:к оплате|по акту))?|всего(?:\s+к оплате)?|сумма(?:\s+к оплате)?)\s*:\s*(.*)$/iu;
+const numberLabel = /^номер/iu;
+const dateLabel = /^дата/iu;
+const clientLabel = /^(заказчик|клиент)$/iu;
+const serviceLabel = /^(услуга|работы)$/iu;
+
+function normalizeDate(value) {
+  const russian = /^(\d{1,2})\.(\d{1,2})\.(\d{4})(?:\s*г\.?)?$/iu.exec(value);
+  const iso = /^(\d{4})-(\d{2})-(\d{2})$/u.exec(value);
+  if (!russian && !iso) return '';
+
+  const [day, month, year] = russian ? russian.slice(1) : [iso[3], iso[2], iso[1]];
+  const yearNum = Number(year);
+  const monthNum = Number(month);
+  const dayNum = Number(day);
+  const leap = yearNum % 4 === 0 && (yearNum % 100 !== 0 || yearNum % 400 === 0);
+  const days = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  if (yearNum < 1 || dayNum < 1 || dayNum > (days[monthNum - 1] ?? 0)) return '';
+  return [day.padStart(2, '0'), month.padStart(2, '0'), year].join('.');
+}
+
+function amountInKopecks(text) {
+  const value = text.trim().replace(/\s*(?:₽|руб(?:\.|лей)?|RUB)$/iu, '');
+  const match = /^(-?)(\d+|\d{1,3}(?:[ \u00a0\u202f]\d{3})+)(?:[.,](\d{1,2}))?$/u.exec(value);
+  if (!match) return null;
+
+  const rubles = BigInt(match[2].replace(/[ \u00a0\u202f]/gu, ''));
+  const kopecks = BigInt((match[3] ?? '').padEnd(2, '0'));
+  return (100n * rubles + kopecks) * (match[1] ? -1n : 1n);
+}
+
+function displayAmount(cents) {
+  const negative = cents < 0n;
+  const absolute = negative ? -cents : cents;
+  const rubles = (absolute / 100n).toString().replace(/\B(?=(\d{3})+(?!\d))/gu, ' ');
+  const kopecks = (absolute % 100n).toString().padStart(2, '0');
+  return (negative ? '-' : '') + rubles + ',' + kopecks;
+}
+
+function parseAct(text) {
+  const fields = Object.fromEntries(columns.map(([key]) => [key, '']));
+  const sources = { ...fields };
+  const issues = [];
+  const items = [];
+  const totals = [];
+  let invalidTotal = false;
+  let invalidPosition = false;
+
+  function saveField(key, value, line) {
+    if (!value) return;
+    if (fields[key] && fields[key] !== value) {
+      const label = columns.find(([column]) => column === key)[1];
+      issues.push(`Разные значения поля «${label}».`);
+      return;
+    }
+    fields[key] = value;
+    sources[key] ||= line;
+  }
+
+  function saveDate(value, line) {
+    const date = normalizeDate(value.trim());
+    if (date) saveField('date', date, line);
+    else if (value.trim()) issues.push('Некорректная дата акта.');
+  }
+
+  for (const original of String(text ?? '').split(/\r\n?|\n/u)) {
+    const line = original.trim();
+    if (!line) continue;
+
+    const title = header.exec(line);
+    if (title) {
+      saveField('number', title[1].trim(), original);
+      if (title[2]) saveDate(title[2], original);
+      continue;
+    }
+
+    const item = position.exec(line);
+    if (item) {
+      const amount = amountInKopecks(item[2]);
+      if (amount === null) {
+        invalidPosition = true;
+        issues.push(`Некорректная сумма позиции «${item[1]}».`);
+      }
+      items.push({ name: item[1].trim(), line: original, amount });
+      continue;
+    }
+
+    const labeled = labels.exec(line);
+    if (!labeled) continue;
+    const [, label, rawValue] = labeled;
+    const value = rawValue.trim();
+    if (numberLabel.test(label)) saveField('number', value.replace(/^[№#]\s*/u, ''), original);
+    else if (dateLabel.test(label)) saveDate(value, original);
+    else if (clientLabel.test(label)) saveField('client', value, original);
+    else if (serviceLabel.test(label)) saveField('service', value, original);
+    else if (value) {
+      const amount = amountInKopecks(value);
+      if (amount === null) {
+        invalidTotal = true;
+        issues.push('Некорректная итоговая сумма.');
+      } else {
+        totals.push({ amount, line: original });
+      }
+    }
+  }
+
+  if (!fields.service && items.length) {
+    saveField('service', items.map(({ name }) => name).join('; '), items.map(({ line }) => line).join('\n'));
+  }
+  if (totals.length) {
+    const [first] = totals;
+    saveField('amount', displayAmount(first.amount), first.line);
+    const uniqueTotals = [...new Set(totals.map(({ amount }) => amount))];
+    if (uniqueTotals.length > 1) {
+      sources.amount = totals.map(({ line }) => line).join('\n');
+      issues.push(`В акте указаны разные итоги: ${uniqueTotals.map(displayAmount).join(' и ')} ₽.`);
+    } else if (items.length && !invalidPosition && !invalidTotal) {
+      const sum = items.reduce((value, { amount }) => value + amount, 0n);
+      if (sum !== first.amount) {
+        issues.push(`Сумма позиций ${displayAmount(sum)} ₽, итог акта ${displayAmount(first.amount)} ₽.`);
+      }
+    }
+  }
+
+  for (const [key, label] of columns) {
+    if (!fields[key]) issues.push(`Не заполнено поле «${label}».`);
+  }
+  return { fields, sources, issues: [...new Set(issues)] };
+}
+
+function normalizeKeyPart(value) {
+  return String(value ?? '').normalize('NFKC').trim().replace(/\s+/gu, ' ').toLocaleLowerCase('ru');
+}
+
+function actKey(fields) {
+  const client = normalizeKeyPart(fields.client).replace(/[«»„“”"]/gu, '').trim().replace(/\s+/gu, ' ');
+  const number = normalizeKeyPart(fields.number).replace(/^(?:№|#|no\.|no(?=\s))\s*/u, '');
+  const date = normalizeDate(String(fields.date ?? '').trim());
+  return client && number && date ? JSON.stringify([client, number, date]) : '';
+}
+
+const existingRows = [
+  {
+    number: 'KZ-199',
+    date: '02.11.2026',
+    client: 'ООО «Вектор Событий»',
+    service: 'Организация конференции в Казани',
+    amount: '46 750,00',
+  },
+];
+
+function toCsv(rows) {
+  function escapeCell(value) {
+    const cell = String(value ?? '');
+    // Quoting alone does not prevent spreadsheet software from running a formula.
+    const safe = /^[\t\r\n]|^\s*[=+\-@]/u.test(cell.normalize('NFKC')) ? "'" + cell : cell;
+    return '"' + safe.replaceAll('"', '""') + '"';
+  }
+
+  const headerRow = columns.map(([, label]) => escapeCell(label)).join(';');
+  const dataRows = rows.map((row) => columns.map(([key]) => escapeCell(row[key])).join(';'));
+  return '\uFEFF' + [headerRow, ...dataRows].join('\r\n') + '\r\n';
+}
+
+return { samples, parseAct, actKey, existingRows, toCsv };
+})();
+const byId = (id) => document.getElementById(id);
+const keys = ['number', 'date', 'client', 'service', 'amount'];
+const labels = ['Номер акта', 'Дата', 'Клиент', 'Услуга', 'Сумма, ₽'];
+const sourceInput = byId('source');
+const fileInput = byId('file');
+const analyzeButton = byId('analyze');
+const approveButton = byId('approve');
+const sampleButtons = Object.fromEntries(Object.keys(samples).map((key) => [key, byId(`sample-${key}`)]));
+const rows = [...existingRows];
+let candidate = null;
+let inputVersion = 0;
+
+function element(tag, text, className) {
+  const node = document.createElement(tag);
+  node.textContent = text;
+  if (className) node.className = className;
+  return node;
+}
+
+function showDecision(message, status) {
+  const decision = byId('decision');
+  decision.textContent = message;
+  decision.dataset.kind = status === 'ready' ? 'ok' : status;
+}
+
+function showFields(result) {
+  const fields = keys.map((key, index) => {
+    const field = element('div', '', 'field');
+    const value = result?.fields[key];
+    const evidence = result?.sources[key];
+    field.append(element('span', labels[index], 'field-label'));
+    field.append(element('p', value || '—'));
+    if (evidence) field.append(element('small', evidence));
+    return field;
+  });
+  byId('fields').replaceChildren(...fields);
+}
+
+function showIssues(issues) {
+  byId('issues').replaceChildren(...issues.map((issue) => element('li', issue)));
+}
+
+function clearResult(message = 'Готов к разбору') {
+  candidate = null;
+  approveButton.disabled = true;
+  analyzeButton.disabled = !sourceInput.value.trim();
+  showFields(null);
+  showIssues([]);
+  showDecision(message, 'idle');
+}
+
+function highlightSample(selected) {
+  for (const [key, button] of Object.entries(sampleButtons)) {
+    button.setAttribute('aria-pressed', String(key === selected));
+  }
+}
+
+function setSource(text, filename, sample) {
+  inputVersion += 1;
+  sourceInput.value = text;
+  byId('document-name').textContent = filename;
+  highlightSample(sample);
+  clearResult();
+}
+
+function processAct() {
+  const result = parseAct(sourceInput.value);
+  const issues = [...result.issues];
+  if (!issues.length && rows.some((row) => actKey(row) === actKey(result.fields))) {
+    issues.push('Акт с этим клиентом, номером и датой уже есть в таблице.');
+  }
+  showFields(result);
+  showIssues(issues);
+  candidate = issues.length ? null : result.fields;
+  approveButton.disabled = !candidate;
+  showDecision(issues.length ? 'Нужна проверка' : 'Поля проверены. Подтвердите запись.', issues.length ? 'blocked' : 'ready');
+}
+
+function showRows() {
+  const renderedRows = rows.map((data) => {
+    const row = document.createElement('tr');
+    row.append(...keys.map((key) => element('td', data[key])));
+    return row;
+  });
+  byId('rows').replaceChildren(...renderedRows);
+  byId('record-count').textContent = `Записей: ${rows.length}`;
+  byId('export').disabled = !rows.length;
+}
+
+function download(content, filename, type) {
+  const url = URL.createObjectURL(new Blob([content], { type }));
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+for (const [key, button] of Object.entries(sampleButtons)) {
+  button.addEventListener('click', () => {
+    fileInput.value = '';
+    setSource(samples[key].text, samples[key].filename, key);
+  });
+}
+
+sourceInput.addEventListener('input', () => {
+  inputVersion += 1;
+  highlightSample();
+  clearResult();
+});
+
+fileInput.addEventListener('change', async () => {
+  const file = fileInput.files[0];
+  if (!file) return;
+  const version = ++inputVersion;
+  if (!/\.txt$/i.test(file.name) || file.size > 64 * 1024) {
+    setSource('', file.name);
+    showDecision('Нужен файл .txt размером до 64 КБ.', 'blocked');
+    return;
+  }
+  try {
+    const contents = await file.text();
+    if (version === inputVersion) setSource(contents, file.name);
+  } catch {
+    if (version !== inputVersion) return;
+    setSource('', file.name);
+    showDecision('Не удалось прочитать файл. Вставьте текст акта вручную.', 'blocked');
+  }
+});
+
+analyzeButton.addEventListener('click', processAct);
+approveButton.addEventListener('click', () => {
+  if (!candidate) return;
+  rows.push(candidate);
+  candidate = null;
+  approveButton.disabled = true;
+  showRows();
+  showDecision('Строка добавлена в таблицу опыта.', 'ready');
+});
+
+byId('sample-download').addEventListener('click', () => {
+  download(samples.clean.text, samples.clean.filename, 'text/plain;charset=utf-8');
+});
+
+byId('export').addEventListener('click', () => {
+  download(toCsv(rows), 'таблица-опыта.csv', 'text/csv;charset=utf-8');
+});
+
+showRows();
+setSource(samples.clean.text, samples.clean.filename, 'clean');
+
+</script>
+</body>
+</html>
