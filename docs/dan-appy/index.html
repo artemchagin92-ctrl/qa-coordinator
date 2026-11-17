@@ -158,10 +158,9 @@
     .field-label { display: block; color: var(--muted); font-size: 0.75rem; font-weight: 650; }
     .field > p { margin-top: 0.15rem; font-size: 0.875rem; font-weight: 650; }
     .field > small { display: block; color: var(--muted); font-size: 0.75rem; }
-    #issues { margin-top: 0.65rem; overflow-wrap: anywhere; }
+    #issues { margin: 0.65rem 0 0; padding-inline-start: 1.25rem; overflow-wrap: anywhere; }
     #issues:empty { display: none; }
-    #issues p, #issues li { font-size: 0.825rem; }
-    #issues ul { margin: 0.35rem 0; padding-left: 1.25rem; }
+    #issues li { font-size: 0.825rem; }
 
     #decision {
       margin-top: 0.7rem;
@@ -178,10 +177,12 @@
 
     .results { margin-top: 1rem; }
     .table-scroll { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; font-size: 0.875rem; text-align: left; }
-    th, td { padding: 0.65rem 0.6rem; border-bottom: 1px solid var(--line); }
+    table { width: 100%; min-width: 48rem; border-collapse: collapse; font-size: 0.875rem; text-align: left; }
+    th, td { padding: 0.65rem 0.6rem; border-bottom: 1px solid var(--line); vertical-align: top; }
     th { background: #eef3f7; color: #344a5c; font-size: 0.8rem; white-space: nowrap; }
+    td { overflow-wrap: anywhere; }
     tbody tr:last-child td { border-bottom: 0; }
+    td:nth-child(1), td:nth-child(4), td:nth-child(5) { white-space: nowrap; }
     th:last-child, td:last-child { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
     td[colspan] { color: var(--muted); text-align: center; white-space: normal; }
 
@@ -193,7 +194,7 @@
       main { padding-top: 1rem; }
       .workspace { grid-template-columns: minmax(0, 1fr); }
       .card { padding: 0.9rem; }
-      table { min-width: 36rem; }
+      th, td { padding: 0.5rem; }
     }
 
     @media (max-width: 23rem) { #fields { grid-template-columns: minmax(0, 1fr); } }
@@ -213,17 +214,17 @@
       <section class="card" aria-labelledby="source-heading">
         <div class="card-header">
           <div>
-            <h2 id="source-heading">Текст акта</h2>
-            <p class="card-caption">Выберите пример, откройте TXT или вставьте текст.</p>
+            <h2 id="source-heading">Акт оказания услуг</h2>
+            <p class="card-caption">Откройте PDF с текстовым слоем или TXT либо вставьте текст. Для сканов требуется распознавание текста (OCR).</p>
           </div>
         </div>
         <div class="buttons" role="group" aria-label="Примеры актов">
-          <button type="button" id="sample-clean">Обычный акт</button>
+          <button type="button" id="sample-clean">Пример структуры акта оказания услуг</button>
           <button type="button" id="sample-conflict">Расхождение суммы</button>
           <button type="button" id="sample-duplicate">Дубликат</button>
         </div>
         <div class="file-controls">
-          <label class="file-picker">Открыть TXT <input id="file" type="file" accept=".txt,text/plain"></label>
+          <label class="file-picker">Открыть PDF или TXT <input id="file" type="file" accept=".pdf,application/pdf,.txt,text/plain"></label>
           <button type="button" id="sample-download">Скачать пример TXT</button>
         </div>
         <label class="source-label" for="source">Содержимое документа</label>
@@ -241,7 +242,7 @@
           </div>
         </div>
         <div id="fields"></div>
-        <div id="issues"></div>
+        <ul id="issues"></ul>
         <div id="decision" aria-live="polite" aria-atomic="true">Разберите акт, чтобы проверить поля.</div>
         <div class="controls">
           <button type="button" class="primary" id="approve" disabled>Подтвердить и добавить строку</button>
@@ -261,82 +262,95 @@
         <table>
           <thead>
             <tr>
-              <th scope="col">Номер</th>
-              <th scope="col">Дата</th>
+              <th scope="col">ИНН клиента</th>
               <th scope="col">Клиент</th>
-              <th scope="col">Услуга</th>
-              <th scope="col">Сумма</th>
+              <th scope="col">Вид документа</th>
+              <th scope="col">Номер</th>
+              <th scope="col">Дата акта</th>
+              <th scope="col">Договор</th>
+              <th scope="col">Сумма, руб.</th>
             </tr>
           </thead>
-          <tbody id="rows"><tr><td colspan="5">Подтверждённые акты появятся здесь.</td></tr></tbody>
+          <tbody id="rows"><tr><td colspan="7">Подтверждённые акты появятся здесь.</td></tr></tbody>
         </table>
       </div>
     </section>
-    <p class="notes">Демо использует вымышленные документы. Текст и TXT обрабатываются в браузере. Результаты сохраняются в текущей вкладке.</p>
+    <p class="notes">Примеры вымышлены. Файлы и текст обрабатываются в браузере. Результаты сохраняются в текущей вкладке.</p>
   </main>
   <script type="module">
-const { samples, parseAct, actKey, existingRows, toCsv } = (() => {
+const { columns, samples, parseAct, actKey, existingRows, toCsv } = (() => {
+const columns = [
+  ['inn', 'ИНН клиента'],
+  ['client', 'Клиент'],
+  ['documentType', 'Вид документа'],
+  ['number', 'Номер'],
+  ['date', 'Дата акта'],
+  ['contract', 'Договор'],
+  ['amount', 'Сумма, руб.'],
+];
+
+function sampleText(number, monthDay, client, inn, contract, secondPrice, total) {
+  return [
+    'СИНТЕТИЧЕСКИЙ ПРИМЕР',
+    'Акт № ' + number + ' от ' + monthDay + ' апреля 2025 г.',
+    'Исполнитель: Заказчик: Основание:',
+    'ООО «Демо-Сервис», ИНН 7712345607, г. Москва',
+    client + ', ИНН ' + inn + ', г. Казань',
+    'Договор № ' + contract + ' от 01.02.2025',
+    '№ Наименование работ, услуг Кол-во Ед. Цена Сумма',
+    '1 Аренда зала 1 шт 41 500,00 41 500,00',
+    '2 Техническое сопровождение 1 шт ' + secondPrice + ' ' + secondPrice,
+    'Итого: ' + total,
+    'Всего оказано услуг 2, на сумму ' + total + ' руб.',
+  ].join('\n');
+}
+
 const samples = {
   clean: {
-    title: 'Конференция в Казани',
+    title: 'Акт без расхождений',
     filename: 'akt-kazan.txt',
-    text: [
-      'АКТ № KZ-241 от 14.11.2026',
-      'Заказчик: ООО «Северная студия»',
-      'Услуга: Организация конференции в Казани',
-      'Позиция 1: Аренда зала — 38 000,00 ₽',
-      'Позиция 2: Техническое сопровождение — 17 500,50 ₽',
-      'Итого к оплате: 55 500,50 ₽',
-    ].join('\n'),
+    text: sampleText('00000000241', 14, 'АО «Демо-Конференция»', '1640234563', '77/0024-Д', '17 500,50', '59 000,50'),
   },
   conflict: {
     title: 'Расхождение по сумме',
-    filename: 'akt-moscow-check.txt',
-    text: [
-      'АКТ № MSK-312 от 16.11.2026',
-      'Заказчик: ООО «Маяк Медиа»',
-      'Услуга: Организация конференции в Москве',
-      'Позиция 1: Аренда зала — 46 000,00 ₽',
-      'Позиция 2: Техническое сопровождение — 18 000,00 ₽',
-      'Итого: 68 000,00 ₽',
-    ].join('\n'),
+    filename: 'akt-summa.txt',
+    text: sampleText('00000000312', 16, 'АО «Демо-Медиа»', '2345678901', '77/0031-Д', '18 000,00', '68 000,00'),
   },
   duplicate: {
-    title: 'Акт уже в реестре',
+    title: 'Акт уже в таблице',
     filename: 'akt-kazan-repeat.txt',
-    text: [
-      'АКТ № KZ-199 от 02.11.2026',
-      'Заказчик: ООО «Вектор Событий»',
-      'Услуга: Организация конференции в Казани',
-      'Позиция 1: Аренда зала — 32 500,00 ₽',
-      'Позиция 2: Техническое сопровождение — 14 250,00 ₽',
-      'Итого: 46 750,00 ₽',
-    ].join('\n'),
+    text: sampleText('00000000199', 2, 'ООО «Демо-События»', '3456789012', '77/0019-Д', '14 250,00', '55 750,00'),
   },
 };
 
-const columns = [
-  ['number', 'Номер акта'],
-  ['date', 'Дата'],
-  ['client', 'Заказчик'],
-  ['service', 'Услуга'],
-  ['amount', 'Сумма'],
+const months = [
+  'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
+  'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря',
 ];
-
-const header = /^акт(?:\s+(?:выполненных работ|оказанных услуг))?\s*(?:№|#)\s*(.+?)(?:\s+от\s+(.+))?$/iu;
-const position = /^(?:позиция|строка)\s*\d*\s*:\s*(.+?)\s+(?:—|–|-)\s+(.+)$/iu;
-const labels = /^(номер(?:\s+акта)?|дата(?:\s+акта)?|заказчик|клиент|услуга|работы|итого(?:\s+(?:к оплате|по акту))?|всего(?:\s+к оплате)?|сумма(?:\s+к оплате)?)\s*:\s*(.*)$/iu;
-const numberLabel = /^номер/iu;
-const dateLabel = /^дата/iu;
-const clientLabel = /^(заказчик|клиент)$/iu;
-const serviceLabel = /^(услуга|работы)$/iu;
+const numberPattern = '(?:\\d{1,3}(?:[ \\u00a0\\u202f]\\d{3})+|\\d+)';
+const moneyPattern = '-?' + numberPattern + '(?:[.,]\\d{1,2})?';
+const simpleAmount = new RegExp('^(-?)(' + numberPattern + ')(?:[.,](\\d{1,2}))?$', 'u');
+const serviceLine = new RegExp(
+  '(?:^|\\s)\\d+(?:[.,]\\d+)?\\s+(?:шт\\.?|усл\\.?|ед\\.?|ч\\.?)\\s+'
+  + moneyPattern + '\\s+(' + moneyPattern + ')\\s*(?:₽|руб\\.?)?$',
+  'iu',
+);
+const labeledPosition = /^(?:позиция|строка)\s*\d*\s*:\s*(.+?)\s+(?:—|–|-)\s+(.+)$/iu;
+const partyPattern = /((?:ООО|ПАО|ОАО|ЗАО|АО|НАО|ИП|ФГУП|НКО)\s+(?:«[^»]+»|"[^"]+"|“[^”]+”|[^,;\n]+?))\s*[,;\s]+\s*ИНН\s*[:№]?\s*(\d{12}|\d{10})(?!\d)/giu;
+const rolePattern = /(?:^|\n)\s*(Исполнитель|Поставщик|Заказчик|Покупатель|Клиент|Основание)\s*:/gimu;
 
 function normalizeDate(value) {
   const russian = /^(\d{1,2})\.(\d{1,2})\.(\d{4})(?:\s*г\.?)?$/iu.exec(value);
   const iso = /^(\d{4})-(\d{2})-(\d{2})$/u.exec(value);
-  if (!russian && !iso) return '';
+  const long = /^(\d{1,2})\s+([а-яё]+)\s+(\d{4})(?:\s*г\.?)?$/iu.exec(value);
+  let day, month, year;
+  if (russian) [, day, month, year] = russian;
+  else if (iso) [, year, month, day] = iso;
+  else if (long) {
+    [, day, month, year] = long;
+    month = String(months.indexOf(month.toLocaleLowerCase('ru')) + 1);
+  } else return '';
 
-  const [day, month, year] = russian ? russian.slice(1) : [iso[3], iso[2], iso[1]];
   const yearNum = Number(year);
   const monthNum = Number(month);
   const dayNum = Number(day);
@@ -348,9 +362,8 @@ function normalizeDate(value) {
 
 function amountInKopecks(text) {
   const value = text.trim().replace(/\s*(?:₽|руб(?:\.|лей)?|RUB)$/iu, '');
-  const match = /^(-?)(\d+|\d{1,3}(?:[ \u00a0\u202f]\d{3})+)(?:[.,](\d{1,2}))?$/u.exec(value);
+  const match = simpleAmount.exec(value);
   if (!match) return null;
-
   const rubles = BigInt(match[2].replace(/[ \u00a0\u202f]/gu, ''));
   const kopecks = BigInt((match[3] ?? '').padEnd(2, '0'));
   return (100n * rubles + kopecks) * (match[1] ? -1n : 1n);
@@ -359,25 +372,53 @@ function amountInKopecks(text) {
 function displayAmount(cents) {
   const negative = cents < 0n;
   const absolute = negative ? -cents : cents;
-  const rubles = (absolute / 100n).toString().replace(/\B(?=(\d{3})+(?!\d))/gu, ' ');
-  const kopecks = (absolute % 100n).toString().padStart(2, '0');
-  return (negative ? '-' : '') + rubles + ',' + kopecks;
+  return (negative ? '-' : '') + (absolute / 100n) + '.' + (absolute % 100n).toString().padStart(2, '0');
+}
+
+function tidyClient(value) {
+  return value.trim().replace(/\s+/gu, ' ')
+    .replace(/["«“]([^"»”]+)["»”]/gu, (_match, name) => {
+      const normalized = name === name.toLocaleUpperCase('ru')
+        ? name.toLocaleLowerCase('ru').replace(/(^|[\s–-])(\p{L})/gu, (_word, gap, first) => gap + first.toLocaleUpperCase('ru'))
+        : name;
+      return '«' + normalized + '»';
+    });
+}
+
+function pickCustomer(text, headerEnd) {
+  const header = text.slice(0, headerEnd);
+  const parties = [...header.matchAll(partyPattern)];
+  const roles = [...header.matchAll(rolePattern)];
+  const customerRole = roles.findIndex((role) => /^(заказчик|покупатель|клиент)$/iu.test(role[1]));
+  const fused = /(?:исполнитель|поставщик)\s*:\s*(?:заказчик|покупатель|клиент)\s*:\s*(?:основание\s*:\s*)?/iu.exec(header);
+
+  if (fused) {
+    // PDF extractors can read the labels column and then the values column.
+    const ordered = parties.filter((party) => party.index >= fused.index + fused[0].length);
+    return ordered.length === 2 ? ordered[1] : null;
+  }
+  if (customerRole < 0) return null;
+  const role = roles[customerRole];
+  const limit = roles[customerRole + 1]?.index ?? header.length;
+  const matches = parties.filter((party) => party.index >= role.index + role[0].length && party.index < limit);
+  return matches.length === 1 ? matches[0] : null;
 }
 
 function parseAct(text) {
+  const normalized = String(text ?? '').replace(/\r\n?/gu, '\n');
   const fields = Object.fromEntries(columns.map(([key]) => [key, '']));
   const sources = { ...fields };
   const issues = [];
   const items = [];
   const totals = [];
-  let invalidTotal = false;
+  let expectedCount = null;
   let invalidPosition = false;
 
   function saveField(key, value, line) {
     if (!value) return;
     if (fields[key] && fields[key] !== value) {
       const label = columns.find(([column]) => column === key)[1];
-      issues.push(`Разные значения поля «${label}».`);
+      issues.push('Разные значения поля «' + label + '».');
       return;
     }
     fields[key] = value;
@@ -390,67 +431,91 @@ function parseAct(text) {
     else if (value.trim()) issues.push('Некорректная дата акта.');
   }
 
-  for (const original of String(text ?? '').split(/\r\n?|\n/u)) {
-    const line = original.trim();
-    if (!line) continue;
+  function saveTotal(value, line) {
+    const amount = amountInKopecks(value);
+    if (amount === null) issues.push('Некорректная итоговая сумма.');
+    else totals.push({ amount, line });
+  }
 
-    const title = header.exec(line);
-    if (title) {
-      saveField('number', title[1].trim(), original);
-      if (title[2]) saveDate(title[2], original);
+  const title = /^([ \t]*акт(?:[ \t]+(?:об оказании услуг|оказания услуг|выполненных работ))?)[ \t]*(?:№|#)[ \t]*([^\n]+?)\s+от[ \t]+([^\n]+)$/imu.exec(normalized);
+  if (title) {
+    const type = /выполненных работ/iu.test(title[1]) ? 'Акт выполненных работ' : 'Акт оказания услуг';
+    saveField('documentType', type, title[0]);
+    saveField('number', title[2].trim(), title[0]);
+    saveDate(title[3], title[0]);
+  }
+
+  const contract = /^[ \t]*(?:основание\s*:\s*)?договор[ \t]*[:№#-]?[ \t]*([^,\n]+?)\s+от[ \t]+([^\n]+)$/imu.exec(normalized);
+  if (contract) {
+    const date = normalizeDate(contract[2].trim());
+    if (date) saveField('contract', contract[1].trim() + ' от ' + date, contract[0]);
+    else issues.push('Некорректная дата договора.');
+  }
+
+  const heading = /(?:^|\n)[ \t]*(?:№[ \t]+наименование|позиция\s*\d|строка\s*\d|итого\s*:)/imu.exec(normalized);
+  const headerEnd = Math.min(contract?.index ?? normalized.length, heading?.index ?? normalized.length);
+  const customer = pickCustomer(normalized, headerEnd);
+  if (customer) {
+    saveField('client', tidyClient(customer[1]), customer[0]);
+    saveField('inn', customer[2], customer[0]);
+  }
+  const shortHeader = normalized.slice(0, headerEnd);
+  const inlineCustomer = /^[ \t]*(?:заказчик|покупатель|клиент)\s*:[ \t]*([^\n]+)$/imu.exec(shortHeader);
+  if (!customer && inlineCustomer) {
+    const value = inlineCustomer[1].trim();
+    if (!/^(?:исполнитель|основание|заказчик)\s*:/iu.test(value)) saveField('client', tidyClient(value), inlineCustomer[0]);
+  }
+  // A standalone INN is safe to read only if there is no second named party.
+  if (!customer && inlineCustomer && !/(?:исполнитель|поставщик)\s*:/iu.test(shortHeader)) {
+    const inn = /^[ \t]*(?:инн клиента|инн заказчика|инн)\s*:[ \t]*(\d{12}|\d{10})[ \t]*$/imu.exec(shortHeader);
+    if (inn) saveField('inn', inn[1], inn[0]);
+  }
+
+  for (const original of normalized.split('\n')) {
+    const line = original.trim();
+    const summary = /^всего оказано услуг\s+(\d+)\s*[,;]?\s+на сумму\s*:?\s*(.+)$/iu.exec(line);
+    if (summary) {
+      expectedCount = Number(summary[1]);
+      saveTotal(summary[2], original);
       continue;
     }
-
-    const item = position.exec(line);
-    if (item) {
-      const amount = amountInKopecks(item[2]);
+    const total = /^(?:итого(?:\s+(?:к оплате|по акту))?|всего(?:\s+к оплате)?|сумма(?:\s+к оплате)?)\s*:\s*(.+)$/iu.exec(line);
+    if (total) {
+      saveTotal(total[1], original);
+      continue;
+    }
+    const labeled = labeledPosition.exec(line);
+    const price = labeled?.[2] ?? serviceLine.exec(line)?.[1];
+    if (price !== undefined) {
+      const amount = amountInKopecks(price);
       if (amount === null) {
         invalidPosition = true;
-        issues.push(`Некорректная сумма позиции «${item[1]}».`);
-      }
-      items.push({ name: item[1].trim(), line: original, amount });
-      continue;
-    }
-
-    const labeled = labels.exec(line);
-    if (!labeled) continue;
-    const [, label, rawValue] = labeled;
-    const value = rawValue.trim();
-    if (numberLabel.test(label)) saveField('number', value.replace(/^[№#]\s*/u, ''), original);
-    else if (dateLabel.test(label)) saveDate(value, original);
-    else if (clientLabel.test(label)) saveField('client', value, original);
-    else if (serviceLabel.test(label)) saveField('service', value, original);
-    else if (value) {
-      const amount = amountInKopecks(value);
-      if (amount === null) {
-        invalidTotal = true;
-        issues.push('Некорректная итоговая сумма.');
+        issues.push('Некорректная сумма позиции.');
       } else {
-        totals.push({ amount, line: original });
+        items.push(amount);
       }
     }
   }
 
-  if (!fields.service && items.length) {
-    saveField('service', items.map(({ name }) => name).join('; '), items.map(({ line }) => line).join('\n'));
-  }
   if (totals.length) {
     const [first] = totals;
     saveField('amount', displayAmount(first.amount), first.line);
     const uniqueTotals = [...new Set(totals.map(({ amount }) => amount))];
     if (uniqueTotals.length > 1) {
       sources.amount = totals.map(({ line }) => line).join('\n');
-      issues.push(`В акте указаны разные итоги: ${uniqueTotals.map(displayAmount).join(' и ')} ₽.`);
-    } else if (items.length && !invalidPosition && !invalidTotal) {
-      const sum = items.reduce((value, { amount }) => value + amount, 0n);
+      issues.push('В акте указаны разные итоги: ' + uniqueTotals.map(displayAmount).join(' и ') + ' руб.');
+    } else if (items.length && !invalidPosition) {
+      const sum = items.reduce((value, amount) => value + amount, 0n);
       if (sum !== first.amount) {
-        issues.push(`Сумма позиций ${displayAmount(sum)} ₽, итог акта ${displayAmount(first.amount)} ₽.`);
+        issues.push('Сумма позиций ' + displayAmount(sum) + ' руб., итог акта ' + displayAmount(first.amount) + ' руб.');
       }
     }
   }
-
+  if (expectedCount !== null && expectedCount !== items.length) {
+    issues.push('В акте указано услуг: ' + expectedCount + '. Распознано сумм позиций: ' + items.length + '.');
+  }
   for (const [key, label] of columns) {
-    if (!fields[key]) issues.push(`Не заполнено поле «${label}».`);
+    if (!fields[key]) issues.push('Не заполнено поле «' + label + '».');
   }
   return { fields, sources, issues: [...new Set(issues)] };
 }
@@ -460,7 +525,8 @@ function normalizeKeyPart(value) {
 }
 
 function actKey(fields) {
-  const client = normalizeKeyPart(fields.client).replace(/[«»„“”"]/gu, '').trim().replace(/\s+/gu, ' ');
+  const client = normalizeKeyPart(fields.inn)
+    || normalizeKeyPart(fields.client).replace(/[«»„“”"]/gu, '').trim().replace(/\s+/gu, ' ');
   const number = normalizeKeyPart(fields.number).replace(/^(?:№|#|no\.|no(?=\s))\s*/u, '');
   const date = normalizeDate(String(fields.date ?? '').trim());
   return client && number && date ? JSON.stringify([client, number, date]) : '';
@@ -468,32 +534,83 @@ function actKey(fields) {
 
 const existingRows = [
   {
-    number: 'KZ-199',
-    date: '02.11.2026',
-    client: 'ООО «Вектор Событий»',
-    service: 'Организация конференции в Казани',
-    amount: '46 750,00',
+    inn: '3456789012',
+    client: 'ООО «Демо-События»',
+    documentType: 'Акт оказания услуг',
+    number: '00000000199',
+    date: '02.04.2025',
+    contract: '77/0019-Д от 01.02.2025',
+    amount: '55750.00',
   },
 ];
 
 function toCsv(rows) {
-  function escapeCell(value) {
+  function escapeCell(value, key) {
     const cell = String(value ?? '');
-    // Quoting alone does not prevent spreadsheet software from running a formula.
-    const safe = /^[\t\r\n]|^\s*[=+\-@]/u.test(cell.normalize('NFKC')) ? "'" + cell : cell;
-    return '"' + safe.replaceAll('"', '""') + '"';
+    const isNumber = key === 'amount' && /^-?\d+\.\d{2}$/u.test(cell);
+    const needsPrefix = !isNumber && /^[\t\r\n]|^\s*[=+\-@]/u.test(cell.normalize('NFKC'));
+    const safe = needsPrefix ? "'" + cell : cell;
+    return /[,"\r\n]/u.test(safe) ? '"' + safe.replaceAll('"', '""') + '"' : safe;
   }
 
-  const headerRow = columns.map(([, label]) => escapeCell(label)).join(';');
-  const dataRows = rows.map((row) => columns.map(([key]) => escapeCell(row[key])).join(';'));
-  return '\uFEFF' + [headerRow, ...dataRows].join('\r\n') + '\r\n';
+  const headerRow = columns.map(([, label]) => escapeCell(label)).join(',');
+  const dataRows = rows.map((row) => columns.map(([key]) => escapeCell(row[key], key)).join(','));
+  return [headerRow, ...dataRows].join('\r\n') + '\r\n';
 }
 
-return { samples, parseAct, actKey, existingRows, toCsv };
+return { columns, samples, parseAct, actKey, existingRows, toCsv };
 })();
+const pdfLibrary = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@5.4.624/build/';
+
+class PdfInputError extends Error {}
+
+function textLines(items) {
+  const glyphs = items
+    .filter((item) => item.str?.trim() && item.transform)
+    .map((item) => ({ text: item.str.trim(), x: item.transform[4], y: item.transform[5] }))
+    .sort((first, second) => second.y - first.y || first.x - second.x);
+
+  const lines = [];
+  for (const glyph of glyphs) {
+    const line = lines.at(-1);
+    if (line && Math.abs(line.y - glyph.y) <= 2) {
+      line.parts.push(glyph);
+    } else {
+      lines.push({ y: glyph.y, parts: [glyph] });
+    }
+  }
+  return lines.map((line) => line.parts.sort((a, b) => a.x - b.x).map((part) => part.text).join(' ')).join('\n');
+}
+
+async function extractPdfText(pdfjs, data) {
+  const job = pdfjs.getDocument({ data, isEvalSupported: false, disableFontFace: true, useSystemFonts: false });
+  try {
+    const pdf = await job.promise;
+    if (pdf.numPages > 20) throw new PdfInputError('Для демо нужен PDF объёмом до 20 страниц.');
+    const pages = [];
+    for (let index = 1; index <= pdf.numPages; index += 1) {
+      const page = await pdf.getPage(index);
+      const content = await page.getTextContent();
+      pages.push(textLines(content.items));
+    }
+    const text = pages.join('\n\n').trim();
+    if (!text) throw new PdfInputError('В PDF нет читаемого текста. Распознайте скан через OCR и вставьте текст.');
+    return text;
+  } finally {
+    await job.destroy();
+  }
+}
+
+async function browserPdfText(file) {
+  const pdfjs = await import(`${pdfLibrary}pdf.min.mjs`).catch(() => {
+    throw new PdfInputError('Библиотека чтения PDF недоступна. Скопируйте текст акта и вставьте его в поле слева.');
+  });
+  pdfjs.GlobalWorkerOptions.workerSrc = `${pdfLibrary}pdf.worker.min.mjs`;
+  return extractPdfText(pdfjs, new Uint8Array(await file.arrayBuffer()));
+}
+
 const byId = (id) => document.getElementById(id);
-const keys = ['number', 'date', 'client', 'service', 'amount'];
-const labels = ['Номер акта', 'Дата', 'Клиент', 'Услуга', 'Сумма, ₽'];
+const keys = columns.map(([key]) => key);
 const sourceInput = byId('source');
 const fileInput = byId('file');
 const analyzeButton = byId('analyze');
@@ -517,11 +634,11 @@ function showDecision(message, status) {
 }
 
 function showFields(result) {
-  const fields = keys.map((key, index) => {
+  const fields = columns.map(([key, label]) => {
     const field = element('div', '', 'field');
     const value = result?.fields[key];
     const evidence = result?.sources[key];
-    field.append(element('span', labels[index], 'field-label'));
+    field.append(element('span', label, 'field-label'));
     field.append(element('p', value || '—'));
     if (evidence) field.append(element('small', evidence));
     return field;
@@ -560,7 +677,7 @@ function processAct() {
   const result = parseAct(sourceInput.value);
   const issues = [...result.issues];
   if (!issues.length && rows.some((row) => actKey(row) === actKey(result.fields))) {
-    issues.push('Акт с этим клиентом, номером и датой уже есть в таблице.');
+    issues.push('Акт с этим ИНН клиента, номером и датой уже есть в таблице.');
   }
   showFields(result);
   showIssues(issues);
@@ -607,19 +724,25 @@ sourceInput.addEventListener('input', () => {
 fileInput.addEventListener('change', async () => {
   const file = fileInput.files[0];
   if (!file) return;
-  const version = ++inputVersion;
-  if (!/\.txt$/i.test(file.name) || file.size > 64 * 1024) {
-    setSource('', file.name);
-    showDecision('Нужен файл .txt размером до 64 КБ.', 'blocked');
+  const extension = file.name.match(/\.(pdf|txt)$/i)?.[1]?.toLowerCase();
+  const limit = extension === 'pdf' ? 8 * 1024 * 1024 : 64 * 1024;
+  setSource('', file.name);
+  const version = inputVersion;
+  if (!extension || file.size > limit) {
+    showDecision('Подойдёт PDF до 8 МБ или TXT до 64 КБ.', 'blocked');
     return;
   }
+  showDecision('Читаю документ…', 'idle');
   try {
-    const contents = await file.text();
+    const contents = extension === 'pdf' ? await browserPdfText(file) : await file.text();
     if (version === inputVersion) setSource(contents, file.name);
-  } catch {
-    if (version !== inputVersion) return;
-    setSource('', file.name);
-    showDecision('Не удалось прочитать файл. Вставьте текст акта вручную.', 'blocked');
+  } catch (error) {
+    if (version === inputVersion) {
+      const message = error instanceof PdfInputError
+        ? error.message
+        : 'Не удалось прочитать файл. Вставьте текст акта вручную.';
+      showDecision(message, 'blocked');
+    }
   }
 });
 
